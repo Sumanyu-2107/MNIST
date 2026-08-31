@@ -1,0 +1,26 @@
+Architecture:
+784 → 64 → 32 → 10
+
+Activation:
+ReLU
+
+Output:
+Softmax
+
+Loss:
+Cross Entropy
+
+Optimizer:
+Gradient Descent + Momentum
+
+Batch Size:
+64
+
+Learning Rate:
+0.07 with decay
+
+Best Validation Accuracy:
+97.86%
+
+Best Test Accuracy:
+97.89%

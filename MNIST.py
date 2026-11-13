@@ -31,6 +31,8 @@ learning_rate = 0.07
 momentum = 0.9
 epoch_num = 100
 
+early_stopping_point = 15
+
 
 data = np.load("mnist.npz")
 train_images = data["x_train"]
@@ -79,6 +81,8 @@ batch_loss_history = []
 batch_accuracy_history = []
 validation_accuracy_history = []
 best_accuracy = 0
+
+stopper_count = 0                   ## Early Stopping
 
 
 for epoch in range(epoch_num):
@@ -143,7 +147,7 @@ for epoch in range(epoch_num):
     validation_accuracy = (correct_predictions / total_predictions) * 100
     validation_accuracy_history.append(validation_accuracy)
 
-    if validation_accuracy >= best_accuracy:
+    if validation_accuracy > best_accuracy:
         best_accuracy = validation_accuracy
         best_w1 = layer1.weights
         best_b1 = layer1.biases
@@ -152,20 +156,21 @@ for epoch in range(epoch_num):
         best_w3 = layer3.weights
         best_b3 = layer3.biases
         print("Epoch " + str(epoch + 1) + ": Loss = " + str(net_loss) + "\n         Accuracy = " + str(net_accuracy) + "        Validation Accuracy = " + str(validation_accuracy) + " (Best)")
+        stopper_count = 0
     else:
         print("Epoch " + str(epoch + 1) + ": Loss = " + str(net_loss) + "\n         Accuracy = " + str(net_accuracy) + "        Validation Accuracy = " + str(validation_accuracy))
-layer1.weights = best_w1
-layer1.biases = best_b1
-layer2.weights = best_w2
-layer2.biases = best_b2
-layer3.weights = best_w3
-layer3.biases = best_b3
-
+        stopper_count += 1
+        if stopper_count == early_stopping_point:
+            break
 
 test_size = 10000
 test_images = data["x_test"][:test_size]
 test_images = test_images.reshape(-1, 784) / 255.0
 test_labels = data["y_test"][:test_size]
+
+print("\n")
+
+# Last model
 
 layer1_linear = layer1.forward(test_images)
 neuron1 = relu(layer1_linear)
@@ -178,9 +183,32 @@ predictions = np.argmax(output, axis=1)
 correct_predictions = np.sum(predictions == test_labels)
 total_predictions = len(test_labels)
 accuracy = (correct_predictions / total_predictions) * 100
-print("Test Size = " + str(test_size) + "    Loss = " + str(loss) + "    Accuracy = " + str(accuracy))
+print("Last model testing:\nTest Size = " + str(test_size) + "\tLoss = " + str(loss) + "\tAccuracy = " + str(accuracy))
+
+# Best model
+
+layer1.weights = best_w1
+layer1.biases = best_b1
+layer2.weights = best_w2
+layer2.biases = best_b2
+layer3.weights = best_w3
+layer3.biases = best_b3
+
+layer1_linear = layer1.forward(test_images)
+neuron1 = relu(layer1_linear)
+layer2_linear = layer2.forward(neuron1)
+neuron2 = relu(layer2_linear)
+output = softmax(layer3.forward(neuron2))
+
+loss = np.mean(cost(output, test_labels))
+predictions = np.argmax(output, axis=1)
+correct_predictions = np.sum(predictions == test_labels)
+total_predictions = len(test_labels)
+accuracy = (correct_predictions / total_predictions) * 100
+print("Best validation model:\nTest Size = " + str(test_size) + "\tLoss = " + str(loss) + "\tAccuracy = " + str(accuracy))
 
 
+print("\n\n")
 ## I DON'T KNOW AFTER THIS ##
 
 
